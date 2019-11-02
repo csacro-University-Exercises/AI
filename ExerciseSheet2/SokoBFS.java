@@ -74,19 +74,30 @@ public class SokoBFS {
     private static State move (State curstate, int dx, int dy, ArrayList<String> lab, String move) {
         State ret = curstate.copy();
         ret.steps += move;
-        ret.pos.translate(dx, dy);
+        ComparablePoint position = ret.pos;
+        position.translate(dx, dy);
 
-        if(!isPassable(ret.pos, lab)){
+        if(!isPassable(position, lab)){
             return null;
         } else {
+            int compbox;
+            int comppos;
             for(ComparablePoint box: ret.boxpos) {
-                if(ret.pos.compareTo(box) == 0) {
+                comppos = position.compareTo(box);
+                if(comppos < 0) {
+                    break;
+                }
+                if(comppos == 0) {
                     box.translate(dx, dy);
                     if (!isPassable(box, lab)) {
                         return null;
                     } else {
                         for(ComparablePoint boxcomp: ret.boxpos) {
-                            if(box.compareTo(boxcomp) == 0) {
+                            compbox = box.compareTo(boxcomp);
+                            if(compbox < 0) {
+                                break;
+                            }
+                            if(compbox == 0) {
                                 return null;
                             }
                         }
@@ -99,8 +110,10 @@ public class SokoBFS {
         return ret;
     }
     private static boolean isPassable(ComparablePoint point, ArrayList<String> lab) {
-        if( point.x>=0 && point.x<lab.size() && point.y>=0 && point.y<lab.get(0).length()
-                && lab.get(point.x).charAt(point.y) != '#' ) {
+        int x = point.x;
+        int y = point.y;
+        if( x>=0 && x<lab.size() && y>=0 && y<lab.get(0).length()
+                && lab.get(x).charAt(y) != '#' ) {
             return true;
         }
         return false;
