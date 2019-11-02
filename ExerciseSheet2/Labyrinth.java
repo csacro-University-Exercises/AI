@@ -54,10 +54,13 @@ public class Labyrinth {
     }
 
     private static void checkPoint(Point point, ArrayList<Point> visited, ArrayList<String> lab, int steps) {
+        int rate;
         if(!isInList(point, visited)) {
-            visited.add(point);
-            if (ratePosition(point, lab) == 0) {
-                System.out.print(Integer.toString(steps) + "\r\n");
+            rate = ratePosition(point, lab);
+            if(rate>0) {
+                visited.add(point);
+            }else if (rate == 0) {
+                System.out.println(steps);
                 System.exit(0);
             }
         }
