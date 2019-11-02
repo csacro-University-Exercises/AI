@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
@@ -40,6 +41,7 @@ public class SokoBFS {
 
         //Search
         if(startpos != null && !startboxpos.isEmpty()) {
+            Collections.sort(startboxpos);
             State startstate = new State(startpos, startboxpos);
             ArrayList<State> visited = new ArrayList<State>();
             visited.add(startstate);
@@ -74,33 +76,24 @@ public class SokoBFS {
     private static State move (State curstate, int dx, int dy, ArrayList<String> lab, String move) {
         State ret = curstate.copy();
         ret.steps += move;
-        ComparablePoint position = ret.pos;
-        position.translate(dx, dy);
+        ret.pos = new ComparablePoint(ret.pos.x+dx, ret.pos.y+dy);
 
-        if(!isPassable(position, lab)){
+        if(!isPassable(ret.pos, lab)){
             return null;
         } else {
-            int compbox;
-            int comppos;
+            int comp;
             for(ComparablePoint box: ret.boxpos) {
-                comppos = position.compareTo(box);
-                if(comppos < 0) {
+                comp = ret.pos.compareTo(box);
+                if(comp > 0) {
                     break;
                 }
-                if(comppos == 0) {
-                    box.translate(dx, dy);
-                    if (!isPassable(box, lab)) {
+                if(comp == 0) {
+                    ComparablePoint cp = new ComparablePoint(box.x+dx, box.y+dy);
+                    if (!isPassable(box, lab) || ret.boxpos.contains(cp)) {
                         return null;
                     } else {
-                        for(ComparablePoint boxcomp: ret.boxpos) {
-                            compbox = box.compareTo(boxcomp);
-                            if(compbox < 0) {
-                                break;
-                            }
-                            if(compbox == 0) {
-                                return null;
-                            }
-                        }
+                        box = cp;
+                        break;
                     }
                 }
             }
@@ -140,10 +133,17 @@ public class SokoBFS {
         return true;
     }
 
+    //TODO: not working as expected
     private static boolean isInList(State state, ArrayList<State> stateList) {
         for(State s: stateList) {
-            if(state.pos.equals(s.pos) && state.boxpos.equals(s.boxpos)) {
-                return true;
+            if(state.pos.x == s.pos.x && state.pos.y == s.pos.y) {
+                for(ComparablePoint sbox: s.boxpos) {
+                    for(ComparablePoint statebox: state.boxpos) {
+                        if(statebox.x == sbox.x && statebox.y == sbox.y) {
+                            return true;
+                        }
+                    }
+                }
             }
         }
         return false;
@@ -162,40 +162,48 @@ public class SokoBFS {
             this.pos = pos;
             this.boxpos = boxpos;
             steps = "";
-            Collections.sort(this.boxpos);
+            //this.boxpos.sort(ComparablePoint::compareTo);
+        }
+        public State(ComparablePoint pos, ArrayList<ComparablePoint> boxpos, String steps) {
+            this.pos = pos;
+            this.boxpos = boxpos;
+            this.steps = steps;
             //this.boxpos.sort(ComparablePoint::compareTo);
         }
 
         public State copy() {
-            return new State(this.pos, this.boxpos);
+            return new State(this.pos, this.boxpos, this.steps);
+        }
+
+        @Override
+        public String toString() {
+            String s = "pos: " + pos.toString();
+            s += "\nsteps: " + steps;
+            return s;
         }
     }
 
-    static class ComparablePoint extends Point implements Comparable {
+    static class ComparablePoint extends Point implements Comparable<ComparablePoint> {
 
         public ComparablePoint(int x, int y) {
             super(x,y);
         }
 
         @Override
-        public int compareTo(Object o) {
+        public int compareTo(ComparablePoint o) {
             if(o != null) {
-                if(o instanceof ComparablePoint) {
-                    if(this.x > ((ComparablePoint)o).x) {
+                if(this.x > o.x) {
+                    return 1;
+                } else if(this.x < o.x) {
+                    return -1;
+                } else {
+                    if(this.y > o.y) {
                         return 1;
-                    } else if(this.x < ((ComparablePoint)o).x) {
+                    } else if(this.y < o.y) {
                         return -1;
                     } else {
-                        if(this.y > ((ComparablePoint)o).y) {
-                            return 1;
-                        } else if(this.y < ((ComparablePoint)o).y) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
+                        return 0;
                     }
-                } else {
-                    throw new ClassCastException();
                 }
             } else {
                 throw new NullPointerException();
