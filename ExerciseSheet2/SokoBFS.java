@@ -85,15 +85,25 @@ public class SokoBFS {
             return null;
         } else {
             ComparablePoint box;
+            int comppos;
+            int compbox;
             for(int i=0; i<curstate.boxpos.size(); i++) {
                 box = curstate.boxpos.get(i);
-                if(newpos.compareTo(box) == 0) {
+                comppos = newpos.compareTo(box);
+                if(comppos > 0) {
+                    break;
+                }
+                if(comppos == 0) {
                     ComparablePoint cp = new ComparablePoint(box.x+dx, box.y+dy);
                     if (!isPassable(cp, lab)) {
                         return null;
                     } else {
                         for(ComparablePoint boxpos: curstate.boxpos) {
-                            if(boxpos.compareTo(cp) == 0) {
+                            compbox = boxpos.compareTo(cp);
+                            if(compbox > 0) {
+                                break;
+                            }
+                            if(compbox == 0) {
                                 return null;
                             }
                         }
