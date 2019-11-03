@@ -26,12 +26,18 @@ public class SokoBFS {
                 if((pos_buf = br_buf.indexOf('@')) >= 0) {
                     startpos = new ComparablePoint(linecount , pos_buf);
                 }
-                if((pos_buf = br_buf.indexOf('$')) >= 0) {
-                    startboxpos.add(new ComparablePoint(linecount , pos_buf));
-                }
-                if(br_buf.indexOf('.') >= 0) {
-                    aimcount++;
-                }
+                pos_buf = 0;
+                do {
+                    if((pos_buf = br_buf.indexOf('$', pos_buf+1)) >= 0) {
+                        startboxpos.add(new ComparablePoint(linecount, pos_buf));
+                    }
+                } while(pos_buf>0);
+                pos_buf = 0;
+                do {
+                    if((pos_buf = br_buf.indexOf('.', pos_buf+1)) >= 0) {
+                        aimcount++;
+                    }
+                } while(pos_buf>0);
                 labyrinth.add(br_buf);
                 linecount++;
             }
@@ -142,7 +148,7 @@ public class SokoBFS {
         boolean boxinaim = true;
         int boxinaimcount = 0;
         boolean aimwithbox = false;
-        
+
         for(ComparablePoint box: state.boxpos) {
             if(lab.get(box.x).charAt(box.y) != '.') {
                 boxinaim = false;
