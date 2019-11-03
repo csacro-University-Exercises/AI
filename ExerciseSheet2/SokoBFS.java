@@ -2,12 +2,8 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Collectors;
-
 /**
  * @author Gruppe P: Carolin, Dominik
  */
@@ -51,9 +47,11 @@ public class SokoBFS {
             while(true) {
                 steplength++;
                 size = visited.size();
-                for (int i=0; i<size; i++) {
+                for (int i=size-1; i>=0; i--) {
                     State s = visited.get(i);
-                    if(s.steps.length() == steplength) {
+                    if(s.steps.length() < steplength) {
+                        break;
+                    } else {
                         checkState(goNorth(s, labyrinth), visited, labyrinth);
                         checkState(goSouth(s, labyrinth), visited, labyrinth);
                         checkState(goWest(s, labyrinth), visited, labyrinth);
