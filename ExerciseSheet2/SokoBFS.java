@@ -78,42 +78,48 @@ public class SokoBFS {
     }
 
     private static State move (State curstate, int dx, int dy, ArrayList<String> lab, String move) {
-        State ret = curstate.copy();
-        ret.steps += move;
-        ret.pos = new ComparablePoint(ret.pos.x+dx, ret.pos.y+dy);
+        State ret;
+        ComparablePoint newpos = new ComparablePoint(curstate.pos.x+dx, curstate.pos.y+dy);
 
-        if(!isPassable(ret.pos, lab)){
+        if(!isPassable(newpos, lab)){
             return null;
         } else {
             ComparablePoint box;
-            for(int i=0; i<ret.boxpos.size(); i++) {
-                box = ret.boxpos.get(i);
-                if(ret.pos.compareTo(box) == 0) {
+            for(int i=0; i<curstate.boxpos.size(); i++) {
+                box = curstate.boxpos.get(i);
+                if(newpos.compareTo(box) == 0) {
                     ComparablePoint cp = new ComparablePoint(box.x+dx, box.y+dy);
                     if (!isPassable(cp, lab)) {
                         return null;
                     } else {
-                        for(ComparablePoint boxpos: ret.boxpos) {
+                        for(ComparablePoint boxpos: curstate.boxpos) {
                             if(boxpos.compareTo(cp) == 0) {
                                 return null;
                             }
                         }
+                        ret = curstate.copy();
+                        ret.steps += move;
+                        ret.pos = newpos;
                         ret.boxpos.set(i, cp);
                         Collections.sort(ret.boxpos);
                         return ret;
                     }
                 }
             }
+            ret = curstate.copy();
+            ret.steps += move;
+            ret.pos = newpos;
         }
-        //ret.boxpos.sort(ComparablePoint::compareTo);
         return ret;
     }
+
     private static boolean isPassable(ComparablePoint point, ArrayList<String> lab) {
-        int x = point.x;
-        int y = point.y;
-        if( x>=0 && x<lab.size() && y>=0 && y<lab.get(0).length()
-                && lab.get(x).charAt(y) != '#' ) {
-            return true;
+        try {
+            if (lab.get(point.x).charAt(point.y) != '#') {
+                return true;
+            }
+        } catch (IndexOutOfBoundsException e) {
+            return false;
         }
         return false;
     }
@@ -162,21 +168,15 @@ public class SokoBFS {
         ArrayList<ComparablePoint> boxpos;
         String steps;
 
-        public State() {
-            super();
-            steps = "";
-        }
         public State(ComparablePoint pos, ArrayList<ComparablePoint> boxpos) {
             this.pos = pos;
             this.boxpos = boxpos;
             steps = "";
-            //this.boxpos.sort(ComparablePoint::compareTo);
         }
         public State(ComparablePoint pos, ArrayList<ComparablePoint> boxpos, String steps) {
             this.pos = pos;
             this.boxpos = boxpos;
             this.steps = steps;
-            //this.boxpos.sort(ComparablePoint::compareTo);
         }
 
         public State copy() {
@@ -192,12 +192,6 @@ public class SokoBFS {
                 ret.add(copyPoint(cp));
             }
             return ret;
-        }
-
-        @Override
-        public String toString() {
-            String s = "pos: " + pos.toString() + " | steps: " + steps + " | boxes: " + boxpos.get(0).toString() + " & " + boxpos.get(1).toString();
-            return s;
         }
     }
 
