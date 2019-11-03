@@ -46,15 +46,19 @@ public class SokoBFS {
             ArrayList<State> visited = new ArrayList<State>();
             visited.add(startstate);
             int size;
+            int steplength = -1;
 
             while(true) {
+                steplength++;
                 size = visited.size();
                 for (int i=0; i<size; i++) {
                     State s = visited.get(i);
-                    checkState(goNorth(s, labyrinth), visited, labyrinth);
-                    checkState(goSouth(s, labyrinth), visited, labyrinth);
-                    checkState(goWest(s, labyrinth), visited, labyrinth);
-                    checkState(goEast(s, labyrinth), visited, labyrinth);
+                    if(s.steps.length() == steplength) {
+                        checkState(goNorth(s, labyrinth), visited, labyrinth);
+                        checkState(goSouth(s, labyrinth), visited, labyrinth);
+                        checkState(goWest(s, labyrinth), visited, labyrinth);
+                        checkState(goEast(s, labyrinth), visited, labyrinth);
+                    }
                 }
             }
         }
@@ -81,24 +85,26 @@ public class SokoBFS {
         if(!isPassable(ret.pos, lab)){
             return null;
         } else {
-            int comp;
-            for(ComparablePoint box: ret.boxpos) {
-                comp = ret.pos.compareTo(box);
-                if(comp > 0) {
-                    break;
-                }
-                if(comp == 0) {
+            ComparablePoint box;
+            for(int i=0; i<ret.boxpos.size(); i++) {
+                box = ret.boxpos.get(i);
+                if(ret.pos.compareTo(box) == 0) {
                     ComparablePoint cp = new ComparablePoint(box.x+dx, box.y+dy);
-                    if (!isPassable(box, lab) || ret.boxpos.contains(cp)) {
+                    if (!isPassable(cp, lab)) {
                         return null;
                     } else {
-                        box = cp;
-                        break;
+                        for(ComparablePoint boxpos: ret.boxpos) {
+                            if(boxpos.compareTo(cp) == 0) {
+                                return null;
+                            }
+                        }
+                        ret.boxpos.set(i, cp);
+                        Collections.sort(ret.boxpos);
+                        return ret;
                     }
                 }
             }
         }
-        Collections.sort(ret.boxpos);
         //ret.boxpos.sort(ComparablePoint::compareTo);
         return ret;
     }
@@ -133,16 +139,18 @@ public class SokoBFS {
         return true;
     }
 
-    //TODO: not working as expected
     private static boolean isInList(State state, ArrayList<State> stateList) {
+        boolean bufret = true;
         for(State s: stateList) {
-            if(state.pos.x == s.pos.x && state.pos.y == s.pos.y) {
-                for(ComparablePoint sbox: s.boxpos) {
-                    for(ComparablePoint statebox: state.boxpos) {
-                        if(statebox.x == sbox.x && statebox.y == sbox.y) {
-                            return true;
-                        }
+            if(state.pos.compareTo(s.pos) == 0) {
+                for(int i=0; i<state.boxpos.size(); i++) {
+                    if(state.boxpos.get(i).compareTo(s.boxpos.get(i)) != 0) {
+                        bufret = false;
+                        break;
                     }
+                }
+                if(bufret) {
+                    return true;
                 }
             }
         }
@@ -172,13 +180,23 @@ public class SokoBFS {
         }
 
         public State copy() {
-            return new State(this.pos, this.boxpos, this.steps);
+            return new State(copyPoint(this.pos), copyPointList(this.boxpos), this.steps);
+        }
+
+        private ComparablePoint copyPoint(ComparablePoint cp) {
+            return new ComparablePoint(cp.x, cp.y);
+        }
+        private ArrayList<ComparablePoint> copyPointList(ArrayList<ComparablePoint> cpList) {
+            ArrayList<ComparablePoint> ret = new ArrayList<ComparablePoint>();
+            for(ComparablePoint cp: cpList) {
+                ret.add(copyPoint(cp));
+            }
+            return ret;
         }
 
         @Override
         public String toString() {
-            String s = "pos: " + pos.toString();
-            s += "\nsteps: " + steps;
+            String s = "pos: " + pos.toString() + " | steps: " + steps + " | boxes: " + boxpos.get(0).toString() + " & " + boxpos.get(1).toString();
             return s;
         }
     }
