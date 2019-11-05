@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
+
 /**
  * @author Gruppe P: Carolin, Dominik
  */
@@ -27,17 +29,13 @@ public class SokoBFS {
                     startpos = new ComparablePoint(linecount , pos_buf);
                 }
                 pos_buf = 0;
-                do {
-                    if((pos_buf = br_buf.indexOf('$', pos_buf+1)) >= 0) {
-                        startboxpos.add(new ComparablePoint(linecount, pos_buf));
-                    }
-                } while(pos_buf>0);
+                while((pos_buf = br_buf.indexOf('$', pos_buf+1)) >= 0) {
+                    startboxpos.add(new ComparablePoint(linecount, pos_buf));
+                }
                 pos_buf = 0;
-                do {
-                    if((pos_buf = br_buf.indexOf('.', pos_buf+1)) >= 0) {
+                while((pos_buf = br_buf.indexOf('.', pos_buf+1)) >= 0) {
                         aimcount++;
-                    }
-                } while(pos_buf>0);
+                }
                 labyrinth.add(br_buf);
                 linecount++;
             }
@@ -49,23 +47,25 @@ public class SokoBFS {
         if(startpos != null && !startboxpos.isEmpty()) {
             Collections.sort(startboxpos);
             State startstate = new State(startpos, startboxpos);
-            ArrayList<State> visited = new ArrayList<State>();
-            visited.add(startstate);
+            ArrayList<Integer> visited = new ArrayList<Integer>();
+            ArrayList<State> curstates = new ArrayList<State>();
+            curstates.add(startstate);
+            visited.add(Objects.hashCode(startstate));
             int size;
             int steplength = -1;
 
             while(true) {
                 steplength++;
-                size = visited.size();
+                size = curstates.size();
                 for (int i=size-1; i>=0; i--) {
-                    State s = visited.get(i);
+                    State s = curstates.get(i);
                     if(s.steps.length() < steplength) {
                         break;
                     } else {
-                        checkState(goNorth(s, labyrinth), visited, labyrinth, aimcount);
-                        checkState(goSouth(s, labyrinth), visited, labyrinth, aimcount);
-                        checkState(goWest(s, labyrinth), visited, labyrinth, aimcount);
-                        checkState(goEast(s, labyrinth), visited, labyrinth, aimcount);
+                        checkState(goNorth(s, labyrinth), curstates, labyrinth, aimcount, visited);
+                        checkState(goSouth(s, labyrinth), curstates, labyrinth, aimcount, visited);
+                        checkState(goWest(s, labyrinth), curstates, labyrinth, aimcount, visited);
+                        checkState(goEast(s, labyrinth), curstates, labyrinth, aimcount, visited);
                     }
                 }
             }
@@ -73,13 +73,14 @@ public class SokoBFS {
         System.exit(1);
     }
 
-    private static void checkState(State state, ArrayList<State> visited, ArrayList<String> lab, int aims) {
+    private static void checkState(State state, ArrayList<State> curstates, ArrayList<String> lab, int aims, ArrayList<Integer> visited) {
         if(state != null) {
             if(!isInList(state, visited)) {
-                visited.add(state);
+                curstates.add(state);
+                visited.add(Objects.hashCode(state));
             }
             if (isGoal(state, lab, aims)) {
-                System.out.println(state.steps);
+                System.out.println(state.steps.toUpperCase());
                 System.exit(0);
             }
         }
@@ -89,7 +90,7 @@ public class SokoBFS {
         State ret;
         ComparablePoint newpos = new ComparablePoint(curstate.pos.x+dx, curstate.pos.y+dy);
 
-        if(!isPassable(newpos, lab)){
+        if(!isPassable(newpos, lab) || isMoveBack(move, curstate.steps)){
             return null;
         } else {
             ComparablePoint box;
@@ -106,7 +107,7 @@ public class SokoBFS {
                             }
                         }
                         ret = curstate.copy();
-                        ret.steps += move;
+                        ret.steps += move.toUpperCase();
                         ret.pos = newpos;
                         ret.boxpos.set(i, cp);
                         Collections.sort(ret.boxpos);
@@ -131,17 +132,48 @@ public class SokoBFS {
         }
         return false;
     }
+    private static boolean isMoveBack(String move, String laststeps) {
+        try {
+            String lastmove = laststeps.substring(laststeps.length() - 1);
+            switch (move) {
+                case "u":
+                    if (lastmove.equals("d")) {
+                        return true;
+                    }
+                    break;
+                case "d":
+                    if (lastmove.equals("u")) {
+                        return true;
+                    }
+                    break;
+                case "l":
+                    if (lastmove.equals("r")) {
+                        return true;
+                    }
+                    break;
+                case "r":
+                    if (lastmove.equals("l")) {
+                        return true;
+                    }
+                    break;
+            }
+            return false;
+        } catch (StringIndexOutOfBoundsException e) {
+            return false;
+        }
+    }
+
     private static State goNorth(State curstate, ArrayList<String> lab) {
-        return move(curstate, -1, 0, lab, "U");
+        return move(curstate, -1, 0, lab, "u");
     }
     private static State goSouth(State curstate, ArrayList<String> lab) {
-        return move(curstate, 1, 0, lab, "D");
+        return move(curstate, 1, 0, lab, "d");
     }
     private static State goEast(State curstate, ArrayList<String> lab) {
-        return move(curstate, 0, 1, lab, "R");
+        return move(curstate, 0, 1, lab, "r");
     }
     private static State goWest(State curstate, ArrayList<String> lab) {
-        return move(curstate, 0, -1, lab, "L");
+        return move(curstate, 0, -1, lab, "l");
     }
 
     private static boolean isGoal(State state, ArrayList<String> lab, int aims) {
@@ -159,22 +191,14 @@ public class SokoBFS {
         if(boxinaimcount == aims) {
             aimwithbox = true;
         }
-        return boxinaim || aimwithbox;
+        return (boxinaim || aimwithbox);
     }
 
-    private static boolean isInList(State state, ArrayList<State> stateList) {
-        boolean bufret = true;
-        for(State s: stateList) {
-            if(state.pos.compareTo(s.pos) == 0) {
-                for(int i=0; i<state.boxpos.size(); i++) {
-                    if(state.boxpos.get(i).compareTo(s.boxpos.get(i)) != 0) {
-                        bufret = false;
-                        break;
-                    }
-                }
-                if(bufret) {
-                    return true;
-                }
+    private static boolean isInList(State state, ArrayList<Integer> stateList) {
+        int statehash = Objects.hashCode(state);
+        for(int hash: stateList) {
+            if (statehash == hash) {
+                return true;
             }
         }
         return false;
