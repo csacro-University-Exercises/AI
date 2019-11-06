@@ -25,16 +25,19 @@ public class SokoBFS {
         try {
             while (br.ready()) {
                 br_buf = br.readLine();
+                //get agent position
                 if((pos_buf = br_buf.indexOf('@')) >= 0) {
                     startpos = new ComparablePoint(linecount , pos_buf);
                 }
+                //get position of boxes
                 pos_buf = 0;
                 while((pos_buf = br_buf.indexOf('$', pos_buf+1)) >= 0) {
                     startboxpos.add(new ComparablePoint(linecount, pos_buf));
                 }
+                //get number of aims
                 pos_buf = 0;
                 while((pos_buf = br_buf.indexOf('.', pos_buf+1)) >= 0) {
-                        aimcount++;
+                    aimcount++;
                 }
                 labyrinth.add(br_buf);
                 linecount++;
@@ -75,13 +78,13 @@ public class SokoBFS {
 
     private static void checkState(State state, ArrayList<State> curstates, ArrayList<String> lab, int aims, ArrayList<Integer> visited) {
         if(state != null) {
-            if(!isInList(state, visited)) {
-                curstates.add(state);
-                visited.add(Objects.hashCode(state));
-            }
             if (isGoal(state, lab, aims)) {
                 System.out.println(state.steps.toUpperCase());
                 System.exit(0);
+            }
+            if(!isInList(state, visited)) {
+                curstates.add(state);
+                visited.add(Objects.hashCode(state));
             }
         }
     }

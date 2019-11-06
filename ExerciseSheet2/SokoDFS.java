@@ -53,13 +53,30 @@ public class SokoDFS {
             ArrayList<Integer> visited = new ArrayList<Integer>();
             ArrayList<State> curstates = new ArrayList<State>();
             curstates.add(startstate);
-            visited.add(Objects.hashCode(startstate));
+            int hashstartate = Objects.hashCode(startstate);
+            visited.add(hashstartate);
             int check;
             State checkstate = startstate;
             boolean goDeeper = true;
 
             while(true) {
-                check = checkState(checkstate, curstates, labyrinth, aimcount, visited, goDeeper);
+                if(!goDeeper) {
+                    switch (checkstate.lastdir) {
+                        case "d":
+                            checkstate.lastdir = "l";
+                            break;
+                        case "l":
+                            checkstate.lastdir = "r";
+                            break;
+                        case "r":
+                            checkstate.lastdir = "u";
+                            break;
+                        case "u":
+                            checkstate.lastdir = null;
+                            break;
+                    }
+                }
+                check = checkState(checkstate, curstates, labyrinth, aimcount, visited, goDeeper, checkstate.lastdir);
                 switch (check) {
                     case -1:
                         curstates.remove(curstates.size()-1);
@@ -67,7 +84,6 @@ public class SokoDFS {
                         goDeeper = false;
                         break;
                     case 0:
-                        checkstate = curstates.get(curstates.size()-1);
                         goDeeper = false;
                         break;
                     case 1:
@@ -75,49 +91,32 @@ public class SokoDFS {
                         goDeeper = true;
                         break;
                 }
+                //System.out.println(checkstate.toString());
             }
         }
         System.exit(1);
     }
 
-    private static int checkState(State state, ArrayList<State> curstates, ArrayList<String> lab, int aims, ArrayList<Integer> visited, boolean goDeeper) {
+    private static int checkState(State state, ArrayList<State> curstates, ArrayList<String> lab, int aims, ArrayList<Integer> visited, boolean goDeeper, String dir) {
         State retstate = null;
-        String lastmove;
 
-        try {
-            lastmove = state.steps.substring(state.steps.length() - 1);
-            switch (lastmove.toLowerCase()) {
+        if(dir == null) {
+            return -1;
+        } else {
+            switch (dir) {
                 case "u":
-                    if(goDeeper) {
-                        retstate = goNorth(state, lab);
-                    } else {
-                        retstate = goSouth(state, lab);
-                    }
+                    retstate = goNorth(state, lab);
                     break;
                 case "d":
-                    if(goDeeper) {
-                        retstate = goSouth(state, lab);
-                    } else {
-                        retstate = goWest(state, lab);
-                    }
+                    retstate = goSouth(state, lab);
                     break;
                 case "l":
-                    if(goDeeper) {
-                        retstate = goWest(state, lab);
-                    } else {
-                        retstate = goEast(state, lab);
-                    }
+                    retstate = goWest(state, lab);
                     break;
                 case "r":
-                    if(goDeeper) {
-                        retstate = goEast(state, lab);
-                    } else {
-                        return -1;
-                    }
+                    retstate = goEast(state, lab);
                     break;
             }
-        } catch (StringIndexOutOfBoundsException e) {
-            retstate = goNorth(state, lab);
         }
 
         if(retstate != null) {
@@ -127,6 +126,7 @@ public class SokoDFS {
             }
             if(!isInList(retstate, visited)) {
                 visited.add(Objects.hashCode(retstate));
+                retstate.lastdir = "d";
                 curstates.add(retstate);
                 return 1;
             }
@@ -256,20 +256,23 @@ public class SokoDFS {
         ComparablePoint pos;
         ArrayList<ComparablePoint> boxpos;
         String steps;
+        String lastdir;
 
         public State(ComparablePoint pos, ArrayList<ComparablePoint> boxpos) {
             this.pos = pos;
             this.boxpos = boxpos;
             steps = "";
+            lastdir = "d";
         }
-        public State(ComparablePoint pos, ArrayList<ComparablePoint> boxpos, String steps) {
+        public State(ComparablePoint pos, ArrayList<ComparablePoint> boxpos, String steps, String lastdir) {
             this.pos = pos;
             this.boxpos = boxpos;
             this.steps = steps;
+            this.lastdir = lastdir;
         }
 
         public State copy() {
-            return new State(copyPoint(this.pos), copyPointList(this.boxpos), this.steps);
+            return new State(copyPoint(this.pos), copyPointList(this.boxpos), this.steps, this.lastdir);
         }
 
         private ComparablePoint copyPoint(ComparablePoint cp) {
@@ -281,6 +284,9 @@ public class SokoDFS {
                 ret.add(copyPoint(cp));
             }
             return ret;
+        }
+        public String toString() {
+            return "pos: " + pos.toString() + " | boxes: " + boxpos.get(0).toString() + boxpos.get(1).toString() + " | steps:" + steps + " | lastdir: " + lastdir;
         }
     }
 
