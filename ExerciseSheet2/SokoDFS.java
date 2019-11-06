@@ -60,7 +60,7 @@ public class SokoDFS {
             boolean goDeeper = true;
 
             while(true) {
-                if(!goDeeper) {
+                if(!goDeeper || checkstate.steps.length() > 20) { //TODO: don't limit step length
                     switch (checkstate.lastdir) {
                         case "d":
                             checkstate.lastdir = "l";
