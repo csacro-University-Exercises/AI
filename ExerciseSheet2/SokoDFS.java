@@ -50,17 +50,16 @@ public class SokoDFS {
         if(startpos != null && !startboxpos.isEmpty()) {
             Collections.sort(startboxpos);
             State startstate = new State(startpos, startboxpos);
-            ArrayList<Integer> visited = new ArrayList<Integer>();
+            ArrayList<State> visited = new ArrayList<State>();
             ArrayList<State> curstates = new ArrayList<State>();
             curstates.add(startstate);
-            int hashstartate = Objects.hashCode(startstate);
-            visited.add(hashstartate);
+            visited.add(startstate);
             int check;
             State checkstate = startstate;
             boolean goDeeper = true;
 
             while(true) {
-                if(!goDeeper || checkstate.steps.length() > 20) { //TODO: don't limit step length
+                if(!goDeeper) {
                     switch (checkstate.lastdir) {
                         case "d":
                             checkstate.lastdir = "l";
@@ -97,7 +96,7 @@ public class SokoDFS {
         System.exit(1);
     }
 
-    private static int checkState(State state, ArrayList<State> curstates, ArrayList<String> lab, int aims, ArrayList<Integer> visited, boolean goDeeper, String dir) {
+    private static int checkState(State state, ArrayList<State> curstates, ArrayList<String> lab, int aims, ArrayList<State> visited, boolean goDeeper, String dir) {
         State retstate = null;
 
         if(dir == null) {
@@ -125,7 +124,7 @@ public class SokoDFS {
                 System.exit(0);
             }
             if(!isInList(retstate, visited)) {
-                visited.add(Objects.hashCode(retstate));
+                visited.add(retstate);
                 retstate.lastdir = "d";
                 curstates.add(retstate);
                 return 1;
@@ -242,11 +241,21 @@ public class SokoDFS {
         return (boxinaim || aimwithbox);
     }
 
-    private static boolean isInList(State state, ArrayList<Integer> stateList) {
-        int statehash = Objects.hashCode(state);
-        for(int hash: stateList) {
-            if (statehash == hash) {
-                return true;
+    private static boolean isInList(State state, ArrayList<State> stateList) {
+        boolean bufret = true;
+        for(State s: stateList) {
+            if(state.pos.compareTo(s.pos) == 0) {
+                for(int i=0; i<state.boxpos.size(); i++) {
+                    if(state.boxpos.get(i).compareTo(s.boxpos.get(i)) != 0) {
+                        bufret = false;
+                        break;
+                    }
+                }
+                if(bufret) {
+                    return true;
+                } else {
+                    bufret = true;
+                }
             }
         }
         return false;

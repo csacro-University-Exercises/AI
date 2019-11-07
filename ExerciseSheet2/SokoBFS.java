@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Objects;
 
 /**
  * @author Gruppe P: Carolin, Dominik
@@ -50,10 +49,8 @@ public class SokoBFS {
         if(startpos != null && !startboxpos.isEmpty()) {
             Collections.sort(startboxpos);
             State startstate = new State(startpos, startboxpos);
-            ArrayList<Integer> visited = new ArrayList<Integer>();
             ArrayList<State> curstates = new ArrayList<State>();
             curstates.add(startstate);
-            visited.add(Objects.hashCode(startstate));
             int size;
             int steplength = -1;
 
@@ -65,10 +62,10 @@ public class SokoBFS {
                     if(s.steps.length() < steplength) {
                         break;
                     } else {
-                        checkState(goNorth(s, labyrinth), curstates, labyrinth, aimcount, visited);
-                        checkState(goSouth(s, labyrinth), curstates, labyrinth, aimcount, visited);
-                        checkState(goWest(s, labyrinth), curstates, labyrinth, aimcount, visited);
-                        checkState(goEast(s, labyrinth), curstates, labyrinth, aimcount, visited);
+                        checkState(goNorth(s, labyrinth), curstates, labyrinth, aimcount);
+                        checkState(goSouth(s, labyrinth), curstates, labyrinth, aimcount);
+                        checkState(goWest(s, labyrinth), curstates, labyrinth, aimcount);
+                        checkState(goEast(s, labyrinth), curstates, labyrinth, aimcount);
                     }
                 }
             }
@@ -76,15 +73,14 @@ public class SokoBFS {
         System.exit(1);
     }
 
-    private static void checkState(State state, ArrayList<State> curstates, ArrayList<String> lab, int aims, ArrayList<Integer> visited) {
+    private static void checkState(State state, ArrayList<State> curstates, ArrayList<String> lab, int aims) {
         if(state != null) {
             if (isGoal(state, lab, aims)) {
                 System.out.println(state.steps.toUpperCase());
                 System.exit(0);
             }
-            if(!isInList(state, visited)) {
+            if(!isInList(state, curstates)) {
                 curstates.add(state);
-                visited.add(Objects.hashCode(state));
             }
         }
     }
@@ -101,7 +97,7 @@ public class SokoBFS {
                 box = curstate.boxpos.get(i);
                 if(newpos.compareTo(box) == 0) {
                     ComparablePoint cp = new ComparablePoint(box.x+dx, box.y+dy);
-                    if (!isPassable(cp, lab)) {
+                    if (!isPassable(cp, lab)) { //TODO:  || isBoxCorner(cp, lab)
                         return null;
                     } else {
                         for(ComparablePoint boxpos: curstate.boxpos) {
@@ -197,11 +193,21 @@ public class SokoBFS {
         return (boxinaim || aimwithbox);
     }
 
-    private static boolean isInList(State state, ArrayList<Integer> stateList) {
-        int statehash = Objects.hashCode(state);
-        for(int hash: stateList) {
-            if (statehash == hash) {
-                return true;
+    private static boolean isInList(State state, ArrayList<State> stateList) {
+        boolean bufret = true;
+        for(State s: stateList) {
+            if(state.pos.compareTo(s.pos) == 0) {
+                for(int i=0; i<state.boxpos.size(); i++) {
+                    if(state.boxpos.get(i).compareTo(s.boxpos.get(i)) != 0) {
+                        bufret = false;
+                        break;
+                    }
+                }
+                if(bufret) {
+                    return true;
+                } else {
+                    bufret = true;
+                }
             }
         }
         return false;
