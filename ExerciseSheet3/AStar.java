@@ -51,7 +51,7 @@ public class AStar {
         int cost;
         Node node;
 
-        expand(0,0, 0);
+        expand(0,0);
         while(!goalNode) {
             Collections.sort(fringe);
             node = fringe.removeFirst();
@@ -68,7 +68,7 @@ public class AStar {
                 for(int i=0; i<node.g.size(); i++) {
                     cost = node.g.get(i);
                     if(cost >= 0) {
-                        expand(i, node.pathcost, cost);
+                        expand(i, node.pathcost + cost);
                     }
                 }
             }
@@ -77,16 +77,9 @@ public class AStar {
         System.exit(0);
     }
 
-    private static void expand(int id, int c_old, int c) {
-        Node node = nodes.get(id);
-        int cost = c_old + c;
-
-        if(node.pathcost < 0) {
-            node.pathcost = c;
-        } else if(cost < node.pathcost) {
-            node.pathcost = cost;
-        }
-
+    private static void expand(int id, int c) {
+        Node node = nodes.get(id).copy();
+        node.pathcost = c;
         fringe.add(node);
     }
 
@@ -101,9 +94,24 @@ public class AStar {
             this.h = h;
         }
 
+        public Node copy() {
+            Node n = new Node(this.id, this.h);
+            for(int i: this.g) {
+                n.g.add(i);
+            }
+            return n;
+        }
+
         @Override
         public int compareTo(Node o) {
             return (this.pathcost+this.h) - (o.pathcost+o.h);
         }
+
+        /*
+        @Override
+        public String toString() {
+            return ("id: " + this.id + " | h: " + this.h + " | pathcost: " + this.pathcost);
+        }
+        */
     }
 }
