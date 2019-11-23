@@ -36,7 +36,7 @@ public class AStar {
                     nodeId_buf = Integer.parseInt(br_buf_ar[1]);
                     g_buf = nodes.get(Integer.parseInt(br_buf_ar[0])).g;
                     while(g_buf.size() < nodeId_buf) {
-                        g_buf.add(-1);
+                        g_buf.add(null);
                     }
                     g_buf.add(nodeId_buf, Integer.parseInt(br_buf_ar[2]));
                 }
@@ -48,7 +48,7 @@ public class AStar {
         }
 
         //A* search
-        int cost;
+        Integer cost;
         Node node;
 
         expand(0,0);
@@ -61,13 +61,12 @@ public class AStar {
                 System.out.println(node.id);
                 break;
             }
-
             if(!closed.contains(node.id)) {
                 System.out.println(node.id);
                 closed.add(node.id);
                 for(int i=0; i<node.g.size(); i++) {
                     cost = node.g.get(i);
-                    if(cost >= 0) {
+                    if(cost != null) {
                         expand(i, node.pathcost + cost);
                     }
                 }
@@ -87,7 +86,7 @@ public class AStar {
         int id;
         int h;
         ArrayList<Integer> g = new ArrayList<Integer>();
-        int pathcost = -1;
+        int pathcost = 0;
 
         public Node(int id, int h) {
             this.id = id;
@@ -96,7 +95,7 @@ public class AStar {
 
         public Node copy() {
             Node n = new Node(this.id, this.h);
-            for(int i: this.g) {
+            for(Integer i: this.g) {
                 n.g.add(i);
             }
             return n;
@@ -104,7 +103,7 @@ public class AStar {
 
         @Override
         public int compareTo(Node o) {
-            return (this.pathcost+this.h) - (o.pathcost+o.h);
+            return ((this.pathcost+this.h) - (o.pathcost+o.h));
         }
 
         /*
