@@ -33,12 +33,12 @@ public class AStar {
                 } else if(linecount <= n) {
                     nodes.addLast(new Node(linecount-1, Integer.parseInt(br_buf_ar[0])));
                 } else if(linecount <= n+m) {
-                    nodeId_buf = Integer.parseInt(br_buf_ar[1]);
-                    g_buf = nodes.get(Integer.parseInt(br_buf_ar[0])).g;
-                    while(g_buf.size() < nodeId_buf) {
+                    nodeId_buf = Integer.parseInt(br_buf_ar[1]); //nach
+                    g_buf = nodes.get(Integer.parseInt(br_buf_ar[0])).g; //von .g
+                    while (g_buf.size() <= nodeId_buf) {
                         g_buf.add(null);
                     }
-                    g_buf.add(nodeId_buf, Integer.parseInt(br_buf_ar[2]));
+                    g_buf.set(nodeId_buf, Integer.parseInt(br_buf_ar[2]));
                 }
 
                 linecount++;
@@ -52,7 +52,7 @@ public class AStar {
         Node node;
 
         expand(0,0);
-        while(!goalNode) {
+        while(!goalNode && !fringe.isEmpty()) {
             Collections.sort(fringe);
             node = fringe.removeFirst();
 
