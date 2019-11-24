@@ -45,38 +45,16 @@ public class SudokuEC {
         String[] splitConstraint;
         String ci;
         String cj;
-        ArrayList<String> neighbours_cj;
-        ArrayList<String> neighbours_ci;
         while(!constraints_queue.isEmpty()) {
             constraint = constraints_queue.removeFirst();
             splitConstraint = constraint.split(" ");
             ci = splitConstraint[1];
             cj = splitConstraint[2];
 
-            neighbours_cj = neighbours.get(cj);
-            if(neighbours_cj == null) {
-                neighbours_cj = new ArrayList<String>();
-            }
-            neighbours_cj.add(constraint);
-            neighbours.put(cj, neighbours_cj);
-
-            neighbours_ci = neighbours.get(ci);
-            if(neighbours_ci == null) {
-                neighbours_ci = new ArrayList<String>();
-            }
-            neighbours_ci.add(constraint);
-            neighbours.put(cj, neighbours_ci);
-
-            if(removeInconstistentValues(ci, cj)) {
-                for (String s : neighbours_ci) {
-                    constraints_queue.addLast(s);
-                }
-            }
-            if(removeInconstistentValues(cj, ci)) {
-                for (String s : neighbours_cj) {
-                    constraints_queue.addLast(s);
-                }
-            }
+            addNeighbour(cj, constraint);
+            addNeighbour(ci, constraint);
+            checkValues(ci, cj);
+            checkValues(cj, ci);
         }
 
         //output
@@ -86,6 +64,21 @@ public class SudokuEC {
         }
     }
 
+    private static void addNeighbour(String c, String constraint) {
+        ArrayList <String> neighbours_c = neighbours.get(c);
+        if(neighbours_c == null) {
+            neighbours_c = new ArrayList<String>();
+        }
+        neighbours_c.add(constraint);
+        neighbours.put(c, neighbours_c);
+    }
+    private static void checkValues(String ci, String cj) {
+        if(removeInconstistentValues(ci, cj)) {
+            for (String s : neighbours.get(ci)) {
+                constraints_queue.addLast(s);
+            }
+        }
+    }
     private static boolean removeInconstistentValues(String ci, String cj) {
         boolean removed = false;
         int[] x = nodes.get(ci);
