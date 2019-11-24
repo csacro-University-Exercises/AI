@@ -41,7 +41,6 @@ public class SudokuEC {
         }
 
         //arc consistency
-        //TODO: algorithm not solving completely
         String constraint;
         String[] splitConstraint;
         String ci;
@@ -53,17 +52,29 @@ public class SudokuEC {
             splitConstraint = constraint.split(" ");
             ci = splitConstraint[1];
             cj = splitConstraint[2];
+
             neighbours_cj = neighbours.get(cj);
             if(neighbours_cj == null) {
                 neighbours_cj = new ArrayList<String>();
             }
             neighbours_cj.add(constraint);
+            neighbours.put(cj, neighbours_cj);
+
+            neighbours_ci = neighbours.get(ci);
+            if(neighbours_ci == null) {
+                neighbours_ci = new ArrayList<String>();
+            }
+            neighbours_ci.add(constraint);
+            neighbours.put(cj, neighbours_ci);
+
             if(removeInconstistentValues(ci, cj)) {
-                neighbours_ci = neighbours.get(ci);
-                if(neighbours_ci != null) {
-                    for (String s : neighbours_ci) {
-                        constraints_queue.addFirst(s);
-                    }
+                for (String s : neighbours_ci) {
+                    constraints_queue.addLast(s);
+                }
+            }
+            if(removeInconstistentValues(cj, ci)) {
+                for (String s : neighbours_cj) {
+                    constraints_queue.addLast(s);
                 }
             }
         }
@@ -79,11 +90,14 @@ public class SudokuEC {
         boolean removed = false;
         int[] x = nodes.get(ci);
         int[] y = nodes.get(cj);
-        for(int i=1; i<k+1; i++) {
-            if(y[0]==1 && x[i]==1 && y[i]==1) {
-                x[i] = 0;
-                x[0]--;
-                removed = true;
+        if(y[0] == 1) {
+            for (int i = 1; i < k + 1; i++) {
+                if (y[i] == 1 && x[i] == 1) {
+                    x[i] = 0;
+                    x[0]--;
+                    removed = true;
+                    break;
+                }
             }
         }
         return removed;
@@ -94,8 +108,8 @@ public class SudokuEC {
         String[] splitNums = nums.split(" ");
         int[] ret = new int[k+1];
         for (String s : splitNums) {
-                ret[Integer.parseInt(s)] = 1;
-                count++;
+            ret[Integer.parseInt(s)] = 1;
+            count++;
         }
         ret[0] = count;
         return ret;
