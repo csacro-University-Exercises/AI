@@ -34,12 +34,18 @@ class Node {
         }
 
         friend bool operator< (const Node &a, const Node &b) {
-            return (a.pathCost + a.heuristicValue) < (b.pathCost + b.heuristicValue);
+            if ((a.pathCost + a.heuristicValue) < (b.pathCost + b.heuristicValue)) {
+                return true;
+            } else if ((a.pathCost + a.heuristicValue) == (b.pathCost + b.heuristicValue)) {
+                return a.id < b.id;
+            } else {
+                return false;
+            }
         }
 };
 
 //Helper methods
-void expand(unsigned int id, unsigned int cost, std::set<Node, std::less<Node>> &fringe, const std::vector<Node> &nodes);
+void expand(const Node &node, std::set<Node, std::less<Node>> &fringe, const std::vector<Node> &nodes, const std::vector<std::vector<int>> &edges);
 void loadGraph(std::vector<Node> &nodes, std::vector<std::vector<int>> &edges, std::istream &stream);
 
 int main() {
@@ -67,17 +73,20 @@ int main() {
     std::set<unsigned int>          closedNodes;
     std::set<Node, std::less<Node>> fringe;
 
-    int cost = 0;
     Node node;
 
-    expand(0,0, fringe, nodes);
+    fringe.insert(*nodes.begin());
 
     while(true) {
-#ifndef DOMJUDGE
+#ifndef DOMJUDGE/*
         std::cout << "Fringe: " << fringe.size() << std::endl;
+        if(fringe.size() == 0) {
+            return -1;
+        }
+
         for (auto node : fringe) {
             std::cout << node << std::endl;
-        }
+        }*/
 #endif
 
         node = *fringe.begin();
@@ -92,19 +101,19 @@ int main() {
             std::cout << node.id << std::endl;
             closedNodes.insert(node.id);
 
-            for(unsigned int i = 0; i < edges.at(node.id).size(); i++) {            /* expand node                    */
-                cost = edges.at(node.id).at(i);
-               // std::cout << node.id << " to " << i << ": " << cost << std::endl;
-                if(cost != -1) {
-                    expand(i, node.pathCost + cost, fringe, nodes);
-                }
-            }
+            expand(node, fringe, nodes, edges);
         }
     }
 
     return 0;
 }
 
+/**
+ * Loads the graph from the given stream.
+ * @param nodes  Vector of nodes where the nodes will be written to.
+ * @param edges  Vector of edges where the edges will get written to.
+ * @param stream Stream which should be used to read from.
+ */
 void loadGraph(std::vector<Node> &nodes, std::vector<std::vector<int>> &edges, std::istream &stream) {
     std::string line;
     unsigned int numNodes;
@@ -151,6 +160,20 @@ void loadGraph(std::vector<Node> &nodes, std::vector<std::vector<int>> &edges, s
 #endif
 }
 
-void expand(unsigned int id, unsigned int cost, std::set<Node, std::less<Node>> &fringe, const std::vector<Node> &nodes) {
-    fringe.insert(Node(id, nodes.at(id).heuristicValue, cost));
+/**
+ * Expands the given node.
+ * @param node   Node to expand.
+ * @param fringe Fringe to insert the nodes.
+ * @param nodes  Vector of all nodes.
+ * @param edges  Cost matrix of the edges.
+ */
+void expand(const Node &node, std::set<Node, std::less<Node>> &fringe, const std::vector<Node> &nodes, const std::vector<std::vector<int>> &edges) {
+    int cost;
+
+    for(unsigned int i = 0; i < edges.at(node.id).size(); i++) {
+        cost = edges.at(node.id).at(i);
+        if(node.id != i && cost != -1) {
+            fringe.insert(Node(i, nodes.at(i).heuristicValue, node.pathCost + cost));
+        }
+    }
 }
