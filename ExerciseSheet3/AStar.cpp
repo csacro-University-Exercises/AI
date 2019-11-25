@@ -58,7 +58,7 @@ int main() {
 #ifndef DOMJUDGE
     std::cout << "Reading szenario in..."  << std::endl;
     std::ifstream input;
-    input.open("../AStarInput2.txt");
+    input.open("../AStarInput.txt");
 
     if (!input.is_open()) {
         std::cerr << "Unable to open file!" << std::endl;
@@ -80,14 +80,14 @@ int main() {
     while(true) {
 #ifndef DOMJUDGE/*
         std::cout << "Fringe: " << fringe.size() << std::endl;
-        if(fringe.size() == 0) {
-            return -1;
-        }
 
         for (auto node : fringe) {
             std::cout << node << std::endl;
         }*/
 #endif
+        if(fringe.empty()) {                                                /* unable to solve the search problem */
+            return 0;
+        }
 
         node = *fringe.begin();
         fringe.erase(fringe.begin());
@@ -116,8 +116,8 @@ int main() {
  */
 void loadGraph(std::vector<Node> &nodes, std::vector<std::vector<int>> &edges, std::istream &stream) {
     std::string line;
-    unsigned int numNodes;
-    unsigned int numEdges;
+    unsigned int numNodes = 0;
+    unsigned int numEdges = 0;
 
     for (unsigned int lineCount = 0; stream; lineCount++) {
         std::getline(stream, line);
@@ -147,13 +147,13 @@ void loadGraph(std::vector<Node> &nodes, std::vector<std::vector<int>> &edges, s
     }
 
 #ifndef DOMJUDGE
-    for (unsigned int i = 0; i < nodes.size(); i++) {
-        std::cout << nodes.at(i) << std::endl;
+    for (const auto &node : nodes) {
+        std::cout << node << std::endl;
     }
 
-    for (unsigned int i = 0; i < edges.size(); i++) {
-        for (unsigned int b = 0; b < edges.at(i).size(); b++) {
-            std::cout << std::setw(3) << edges.at(i).at(b) << " ";
+    for (const auto &edge : edges) {
+        for (int b : edge) {
+            std::cout << std::setw(3) << b << " ";
         }
         std::cout << std::endl;
     }
@@ -170,7 +170,7 @@ void loadGraph(std::vector<Node> &nodes, std::vector<std::vector<int>> &edges, s
 void expand(const Node &node, std::set<Node, std::less<Node>> &fringe, const std::vector<Node> &nodes, const std::vector<std::vector<int>> &edges) {
     int cost;
 
-    for(unsigned int i = 0; i < edges.at(node.id).size(); i++) {
+    for(unsigned long i = 0; i < edges.at(node.id).size(); i++) {
         cost = edges.at(node.id).at(i);
         if(node.id != i && cost != -1) {
             fringe.insert(Node(i, nodes.at(i).heuristicValue, node.pathCost + cost));
