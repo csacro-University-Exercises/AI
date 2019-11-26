@@ -22,6 +22,8 @@ public class AStar {
         ArrayList<Integer> g_buf;
         String br_buf;
         String[] br_buf_ar;
+        Integer cost_buf;
+        Integer oldcost_buf;
         try {
             while (br.ready()) {
                 br_buf = br.readLine();
@@ -34,11 +36,17 @@ public class AStar {
                     nodes.addLast(new Node(linecount-1, Integer.parseInt(br_buf_ar[0])));
                 } else if(linecount <= n+m) {
                     nodeId_buf = Integer.parseInt(br_buf_ar[1]); //nach
-                    g_buf = nodes.get(Integer.parseInt(br_buf_ar[0])).g; //von .g
-                    while (g_buf.size() <= nodeId_buf) {
+                    g_buf = nodes.get(Integer.parseInt(br_buf_ar[0])).g; //von.g
+
+                    while (nodeId_buf >= g_buf.size()) {
+                        //fill list until nodeId_buf-1
                         g_buf.add(null);
                     }
-                    g_buf.set(nodeId_buf, Integer.parseInt(br_buf_ar[2]));
+                    cost_buf = Integer.parseInt(br_buf_ar[2]);
+                    oldcost_buf = g_buf.get(nodeId_buf);
+                    if ( oldcost_buf==null || oldcost_buf>cost_buf) {
+                        g_buf.set(nodeId_buf, cost_buf);
+                    }
                 }
 
                 linecount++;
@@ -77,8 +85,7 @@ public class AStar {
     }
 
     private static void expand(int id, int c) {
-        Node node = nodes.get(id).copy();
-        node.pathcost = c;
+        Node node = nodes.get(id).copy(c);
         fringe.add(node);
     }
 
@@ -93,11 +100,12 @@ public class AStar {
             this.h = h;
         }
 
-        public Node copy() {
+        public Node copy(int c) {
             Node n = new Node(this.id, this.h);
             for(Integer i: this.g) {
                 n.g.add(i);
             }
+            n.pathcost = c;
             return n;
         }
 
