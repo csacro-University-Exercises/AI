@@ -1,18 +1,16 @@
+import jdk.nashorn.api.tree.Tree;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 public class CSP {
 
     private static int k;
     private static int anzNodes;
     private static int anzConstraints;
-    //TODO: change nodes (values: int[]) ? --> change read in and arc consistency and output
-    private static LinkedHashMap<String, int[]> nodes = new LinkedHashMap<String, int[]>();
+    private static LinkedHashMap<String, List<String>> nodes = new LinkedHashMap<String, List<String>>();
     private static LinkedList<String> constraints_queue = new LinkedList<String>();
     private static HashMap<String, ArrayList<String>> neighbours = new HashMap<String, ArrayList<String>>();
 
@@ -28,7 +26,7 @@ public class CSP {
                     k = (int) Math.sqrt(anzNodes);
                 } else if(linecount <= anzNodes){
                     br_buf = br.readLine().split(" ", 2);
-                    nodes.put(br_buf[0], posNumToBool(br_buf[1]));
+                    nodes.put(br_buf[0], Arrays.asList(br_buf[1].split(" ")));
                 } else if(linecount == anzNodes+1) {
                     anzConstraints = Integer.parseInt(br.readLine());
                 } else {
@@ -62,10 +60,10 @@ public class CSP {
         //TODO: check if needed, implement algorithm
 
         //output
-        //TODO: sort
+        TreeMap<String, List<String>> sortedNodes = new TreeMap<String, List<String>>(nodes);
         System.out.println(anzNodes);
-        for(HashMap.Entry<String, int[]> entry: nodes.entrySet()) {
-            System.out.println(entry.getKey() + boolToPosNum(entry.getValue()));
+        for(Map.Entry<String, List<String>> entry: sortedNodes.entrySet()) {
+            System.out.println(entry.getKey() + entry.getValue().get(0));
         }
     }
 
@@ -86,39 +84,12 @@ public class CSP {
     }
     private static boolean removeInconstistentValues(String ci, String cj) {
         boolean removed = false;
-        int[] x = nodes.get(ci);
-        int[] y = nodes.get(cj);
-        if(y[0] == 1) {
-            for (int i = 1; i < k + 1; i++) {
-                if (y[i] == 1 && x[i] == 1) {
-                    x[i] = 0;
-                    x[0]--;
-                    removed = true;
-                    break;
-                }
-            }
+        List<String> x = nodes.get(ci);
+        List<String> y = nodes.get(cj);
+
+        if(y.size() == 1 && x.remove(y.get(0))) {
+            removed = true;
         }
         return removed;
-    }
-
-    private static int[] posNumToBool(String nums) {
-        int count = 0;
-        String[] splitNums = nums.split(" ");
-        int[] ret = new int[k+1];
-        for (String s : splitNums) {
-            ret[Integer.parseInt(s)] = 1;
-            count++;
-        }
-        ret[0] = count;
-        return ret;
-    }
-    private static String boolToPosNum(int[] bool) {
-        String ret = "";
-        for(int i=1; i<bool.length; i++) {
-            if (bool[i] == 1) {
-                ret += " " + i;
-            }
-        }
-        return ret;
     }
 }
