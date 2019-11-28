@@ -57,7 +57,9 @@ public class CSP {
         }
 
         //backtrack search
-        //TODO: check if needed, implement algorithm
+        if(isBacktrackSearchNeeded(nodes)) {
+            //TODO: implement algorithm
+        }
 
         //output
         TreeMap<String, List<String>> sortedNodes = new TreeMap<String, List<String>>(nodes);
@@ -65,6 +67,15 @@ public class CSP {
         for(Map.Entry<String, List<String>> entry: sortedNodes.entrySet()) {
             System.out.println(entry.getKey() + entry.getValue().get(0));
         }
+    }
+
+    private static boolean isBacktrackSearchNeeded(HashMap<String, List<String>> map) {
+        for(HashMap.Entry<String, List<String>> entry: map.entrySet()) {
+            if(entry.getValue().size() > 1) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void addNeighbour(String c, String constraint) {
