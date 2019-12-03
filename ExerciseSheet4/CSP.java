@@ -10,7 +10,7 @@ public class CSP {
     private static int k;
     private static int anzNodes;
     private static int anzConstraints;
-    private static LinkedHashMap<String, List<String>> nodes = new LinkedHashMap<String, List<String>>();
+    private static HashMap<String, List<String>> nodes = new HashMap<String, List<String>>();
     private static LinkedList<String> constraints_queue = new LinkedList<String>();
     private static HashMap<String, ArrayList<String>> neighbours = new HashMap<String, ArrayList<String>>();
 
@@ -58,7 +58,7 @@ public class CSP {
 
         //backtrack search
         if(isBacktrackSearchNeeded(nodes)) {
-            //TODO: implement algorithm
+            recursiveBacktracking();
         }
 
         //output
@@ -67,6 +67,24 @@ public class CSP {
         for(Map.Entry<String, List<String>> entry: sortedNodes.entrySet()) {
             System.out.println(entry.getKey() + entry.getValue().get(0));
         }
+    }
+
+    private static boolean recursiveBacktracking() {
+        //TODO: paramlist (have to give copied data structures because of recursion)
+
+        //TODO: var <- SELECT-UNASSIGNED-VARIABLE(VARIABLES[csp], assignment, csp)
+        for() { //TODO: for each value in ORDER-DOMAIN-VALUES(var, assignment, csp)
+            if() { //TODO: if value is consistent with assignment given CONSTRAINTS[csp]
+                //TODO: add {var = value} to assignment
+                boolean result = recursiveBacktracking();
+                if (result) {
+                    //TODO: global data structure = copied data structure
+                    return true;
+                }
+                //TODO: remove {var = value} from assignment
+            }
+        }
+        return false;
     }
 
     private static boolean isBacktrackSearchNeeded(HashMap<String, List<String>> map) {
@@ -99,6 +117,7 @@ public class CSP {
         List<String> y = nodes.get(cj);
 
         if(y.size() == 1 && x.remove(y.get(0))) {
+            nodes.put(ci, x);
             removed = true;
         }
         return removed;
