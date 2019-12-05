@@ -81,7 +81,7 @@ public class CSP {
             String node = selectMRV(assignment);
             List<String> oldNodeValues = assignment.get(node);
             for (String value: oldNodeValues) {
-                if (isConsistent(assignment)) {
+                if (isConsistent(assignment, node, value)) {
                     List<String> nodeValues = new ArrayList<String>();
                     nodeValues.add(value);
                     assignment.replace(node, nodeValues);
@@ -106,9 +106,33 @@ public class CSP {
         return null;
     }
 
-    private static boolean isConsistent(HashMap<String, List<String>> assignment) {
-        //TODO: implement
-        return false;
+    private static boolean isConsistent(HashMap<String, List<String>> assignment, String node, String value) {
+        boolean ret = true;
+        String[] splitConstraint;
+        String c1;
+        String c2;
+        for(String constraint: constraints) {
+            if(constraint.contains(node)) {
+                splitConstraint = constraint.split(" ");
+                c1 = splitConstraint[1];
+                c2 = splitConstraint[2];
+                if(c1.equals(node)) {
+                    ret = checkConsistency(assignment.get(c2), value);
+                } else {
+                    ret = checkConsistency(assignment.get(c1), value);
+                }
+            }
+            if(!ret) {
+                break;
+            }
+        }
+        return ret;
+    }
+    private static boolean checkConsistency(List<String> values, String comp) {
+        if(values.contains(comp) && values.size() <= 1) {
+            return false;
+        }
+        return true;
     }
 
     private static HashMap<String, List<String>> copy(HashMap<String, List<String>> toCopy) {
