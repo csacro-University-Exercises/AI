@@ -1,5 +1,3 @@
-import jdk.nashorn.api.tree.Tree;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -84,13 +82,13 @@ public class CSP {
                 if (isConsistent(assignment, node, value)) {
                     List<String> nodeValues = new ArrayList<String>();
                     nodeValues.add(value);
-                    assignment.replace(node, nodeValues);
+                    assignment.put(node, nodeValues);
                     boolean result = recursiveBacktracking(copy(assignment));
                     if (result) {
                         success = true;
                         break;
                     }
-                    assignment.replace(node, oldNodeValues);
+                    assignment.put(node, oldNodeValues);
                 }
             }
         }
@@ -102,7 +100,7 @@ public class CSP {
     }
 
     private static String selectMRV(HashMap<String, List<String>> assignment) {
-        String key;
+        String key = "";
         int keyValueCount = 0;
         int valueCount;
         for(HashMap.Entry<String, List<String>> entry: assignment.entrySet()) {
