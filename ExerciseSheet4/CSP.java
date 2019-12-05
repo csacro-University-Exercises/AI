@@ -39,14 +39,23 @@ public class CSP {
         }
 
         //backtrack search
-        recursiveBacktracking(copy(nodes));
+        nodes = recursiveBacktracking(copy(nodes));
 
         //output
         TreeMap<String, List<String>> sortedNodes = new TreeMap<String, List<String>>(nodes);
-        System.out.println(anzNodes);
         for(Map.Entry<String, List<String>> entry: sortedNodes.entrySet()) {
-            System.out.println(entry.getKey() + entry.getValue().get(0));
+            System.out.println(entry.getKey() + " " + entry.getValue().get(0));
         }
+        printCompleteOutput(nodes);
+    }
+
+    public static void printCompleteOutput(HashMap<String, List<String>> map) {
+        System.out.println("------------------------");
+        TreeMap<String, List<String>> sortedNodes = new TreeMap<String, List<String>>(map);
+        for(Map.Entry<String, List<String>> entry: sortedNodes.entrySet()) {
+            System.out.println(entry.getKey() + " " + Arrays.toString(entry.getValue().toArray()));
+        }
+        System.out.println("------------------------\n");
     }
 
     private static void AC3(HashMap<String, List<String>> assignment) {
@@ -68,13 +77,12 @@ public class CSP {
         }
     }
 
-    private static boolean recursiveBacktracking(HashMap<String, List<String>> assignment) {
+    private static HashMap<String, List<String>> recursiveBacktracking(HashMap<String, List<String>> assignment) {
         //arc consistency
         AC3(assignment);
 
-        boolean success = false;
         if(!isBacktrackSearchNeeded(assignment)) {
-            success = true;
+            return assignment;
         } else {
             String node = selectMRV(assignment);
             List<String> oldNodeValues = assignment.get(node);
@@ -83,20 +91,15 @@ public class CSP {
                     List<String> nodeValues = new ArrayList<String>();
                     nodeValues.add(value);
                     assignment.put(node, nodeValues);
-                    boolean result = recursiveBacktracking(copy(assignment));
-                    if (result) {
-                        success = true;
-                        break;
+                    HashMap<String, List<String>> result = recursiveBacktracking(copy(assignment));
+                    if (result != null) {
+                        return result;
                     }
                     assignment.put(node, oldNodeValues);
                 }
             }
         }
-
-        if(success) {
-            nodes = assignment;
-        }
-        return success;
+        return null;
     }
 
     private static String selectMRV(HashMap<String, List<String>> assignment) {
@@ -104,7 +107,10 @@ public class CSP {
         int keyValueCount = 0;
         int valueCount;
         for(HashMap.Entry<String, List<String>> entry: assignment.entrySet()) {
-            if( (valueCount=entry.getValue().size()) > keyValueCount) {
+            if(keyValueCount == 0) {
+                key = entry.getKey();
+                keyValueCount = entry.getValue().size();
+            } else if( (valueCount=entry.getValue().size()) < keyValueCount) {
                 key = entry.getKey();
                 keyValueCount = valueCount;
             }
@@ -132,13 +138,15 @@ public class CSP {
                 break;
             }
         }
+
         return ret;
     }
     private static boolean checkConsistency(List<String> values, String comp) {
-        if(values.contains(comp) && values.size() <= 1) {
-            return false;
+        boolean ret = true;
+        if(values.size() <= 1 && values.contains(comp)) {
+            ret = false;
         }
-        return true;
+        return ret;
     }
 
     private static HashMap<String, List<String>> copy(HashMap<String, List<String>> toCopy) {
@@ -147,7 +155,9 @@ public class CSP {
             //copy List
             List<String> toCopyList = entry.getValue();
             List<String> copyList = new ArrayList<String>();
-            copyList.addAll(toCopyList);
+            for(String s: toCopyList) {
+                copyList.add(s);
+            }
 
             copy.put(entry.getKey(), copyList);
         }
@@ -155,17 +165,21 @@ public class CSP {
     }
     private static LinkedList<String> copy(LinkedList<String> toCopy) {
         LinkedList<String> copy = new LinkedList<String>();
-        copy.addAll(toCopy);
+        for(String s: toCopy) {
+            copy.add(s);
+        }
         return copy;
     }
 
     private static boolean isBacktrackSearchNeeded(HashMap<String, List<String>> map) {
+        boolean ret = false;
         for(HashMap.Entry<String, List<String>> entry: map.entrySet()) {
             if(entry.getValue().size() > 1) {
-                return true;
+                ret = true;
             }
         }
-        return false;
+
+        return ret;
     }
 
     private static void addNeighbour(String c, String constraint) {
