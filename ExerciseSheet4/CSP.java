@@ -102,8 +102,16 @@ public class CSP {
     }
 
     private static String selectMRV(HashMap<String, List<String>> assignment) {
-        //TODO: implement
-        return null;
+        String key;
+        int keyValueCount = 0;
+        int valueCount;
+        for(HashMap.Entry<String, List<String>> entry: assignment.entrySet()) {
+            if( (valueCount=entry.getValue().size()) > keyValueCount) {
+                key = entry.getKey();
+                keyValueCount = valueCount;
+            }
+        }
+        return key;
     }
 
     private static boolean isConsistent(HashMap<String, List<String>> assignment, String node, String value) {
