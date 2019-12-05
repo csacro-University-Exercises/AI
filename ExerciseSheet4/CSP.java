@@ -78,6 +78,10 @@ public class CSP {
     }
 
     private static HashMap<String, List<String>> recursiveBacktracking(HashMap<String, List<String>> assignment) {
+        //TODO: other structure for data (StackoverlowError)
+
+        printCompleteOutput(assignment);
+
         //arc consistency
         AC3(assignment);
 
@@ -107,10 +111,10 @@ public class CSP {
         int keyValueCount = 0;
         int valueCount;
         for(HashMap.Entry<String, List<String>> entry: assignment.entrySet()) {
-            if(keyValueCount == 0) {
+            if(keyValueCount <= 1) {
                 key = entry.getKey();
                 keyValueCount = entry.getValue().size();
-            } else if( (valueCount=entry.getValue().size()) < keyValueCount) {
+            } else if( (valueCount=entry.getValue().size()) < keyValueCount && valueCount > 1) {
                 key = entry.getKey();
                 keyValueCount = valueCount;
             }
