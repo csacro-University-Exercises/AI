@@ -38,6 +38,9 @@ public class CSP {
             System.exit(1);
         }
 
+        nodes = copy(nodes);
+        //arc consistency
+        AC3(nodes);
         //backtrack search
         nodes = recursiveBacktracking(copy(nodes));
 
@@ -46,7 +49,6 @@ public class CSP {
         for(Map.Entry<String, List<String>> entry: sortedNodes.entrySet()) {
             System.out.println(entry.getKey() + " " + entry.getValue().get(0));
         }
-        printCompleteOutput(nodes);
     }
 
     public static void printCompleteOutput(HashMap<String, List<String>> map) {
@@ -58,7 +60,7 @@ public class CSP {
         System.out.println("------------------------\n");
     }
 
-    private static void AC3(HashMap<String, List<String>> assignment) {
+    private static boolean AC3(HashMap<String, List<String>> assignment) {
         constraints_queue = copy(constraints);
         String constraint;
         String[] splitConstraint;
@@ -72,35 +74,34 @@ public class CSP {
 
             addNeighbour(cj, constraint);
             addNeighbour(ci, constraint);
-            checkValues(ci, cj, assignment);
-            checkValues(cj, ci, assignment);
+            if(!checkValues(ci, cj, assignment) || !checkValues(cj, ci, assignment)) {
+                return false;
+            }
         }
+        return true;
     }
 
     private static HashMap<String, List<String>> recursiveBacktracking(HashMap<String, List<String>> assignment) {
-        //TODO: other structure for data (StackoverlowError)
-
-        printCompleteOutput(assignment);
-
-        //arc consistency
-        AC3(assignment);
+        HashMap<String, List<String>> copiedAssignment;
+        List<String> copiedNodeValues;
 
         if(!isBacktrackSearchNeeded(assignment)) {
             return assignment;
-        } else {
-            String node = selectMRV(assignment);
-            List<String> oldNodeValues = assignment.get(node);
-            for (String value: oldNodeValues) {
-                if (isConsistent(assignment, node, value)) {
-                    List<String> nodeValues = new ArrayList<String>();
-                    nodeValues.add(value);
-                    assignment.put(node, nodeValues);
-                    HashMap<String, List<String>> result = recursiveBacktracking(copy(assignment));
-                    if (result != null) {
-                        return result;
-                    }
-                    assignment.put(node, oldNodeValues);
+        }
+
+        String node = selectMRV(assignment);
+        List<String> oldNodeValues = assignment.get(node);
+        for (String value: oldNodeValues) {
+            copiedAssignment = copy(assignment);
+            copiedNodeValues = new ArrayList<String>();
+            copiedNodeValues.add(value);
+            copiedAssignment.put(node, copiedNodeValues);
+            if (AC3(copiedAssignment)) {
+                HashMap<String, List<String>> result = recursiveBacktracking(copiedAssignment);
+                if (result != null) {
+                    return result;
                 }
+                assignment.put(node, oldNodeValues);
             }
         }
         return null;
@@ -114,43 +115,12 @@ public class CSP {
             if(keyValueCount <= 1) {
                 key = entry.getKey();
                 keyValueCount = entry.getValue().size();
-            } else if( (valueCount=entry.getValue().size()) < keyValueCount && valueCount > 1) {
+            } else if( (valueCount=entry.getValue().size()) <= keyValueCount && valueCount > 1) {
                 key = entry.getKey();
                 keyValueCount = valueCount;
             }
         }
         return key;
-    }
-
-    private static boolean isConsistent(HashMap<String, List<String>> assignment, String node, String value) {
-        boolean ret = true;
-        String[] splitConstraint;
-        String c1;
-        String c2;
-        for(String constraint: constraints) {
-            if(constraint.contains(node)) {
-                splitConstraint = constraint.split(" ");
-                c1 = splitConstraint[1];
-                c2 = splitConstraint[2];
-                if(c1.equals(node)) {
-                    ret = checkConsistency(assignment.get(c2), value);
-                } else {
-                    ret = checkConsistency(assignment.get(c1), value);
-                }
-            }
-            if(!ret) {
-                break;
-            }
-        }
-
-        return ret;
-    }
-    private static boolean checkConsistency(List<String> values, String comp) {
-        boolean ret = true;
-        if(values.size() <= 1 && values.contains(comp)) {
-            ret = false;
-        }
-        return ret;
     }
 
     private static HashMap<String, List<String>> copy(HashMap<String, List<String>> toCopy) {
@@ -176,14 +146,13 @@ public class CSP {
     }
 
     private static boolean isBacktrackSearchNeeded(HashMap<String, List<String>> map) {
-        boolean ret = false;
         for(HashMap.Entry<String, List<String>> entry: map.entrySet()) {
             if(entry.getValue().size() > 1) {
-                ret = true;
+                return true;
             }
         }
 
-        return ret;
+        return false;
     }
 
     private static void addNeighbour(String c, String constraint) {
@@ -194,21 +163,30 @@ public class CSP {
         neighbours_c.add(constraint);
         neighbours.put(c, neighbours_c);
     }
-    private static void checkValues(String ci, String cj, HashMap<String, List<String>> assignment) {
-        if(removeInconstistentValues(ci, cj, assignment)) {
+    private static boolean checkValues(String ci, String cj, HashMap<String, List<String>> assignment) {
+        int rIV = removeInconstistentValues(ci, cj, assignment);
+        if(rIV == -1) {
+            return false;
+        }
+        if(rIV == 1) {
             for (String s : neighbours.get(ci)) {
                 constraints_queue.addLast(s);
             }
         }
+        return true;
     }
-    private static boolean removeInconstistentValues(String ci, String cj, HashMap<String, List<String>> assignment) {
-        boolean removed = false;
+    private static int removeInconstistentValues(String ci, String cj, HashMap<String, List<String>> assignment) {
+        int removed = 0;
         List<String> x = assignment.get(ci);
         List<String> y = assignment.get(cj);
 
         if(y.size() == 1 && x.remove(y.get(0))) {
-            assignment.put(ci, x);
-            removed = true;
+            if (x.isEmpty()) {
+                removed = -1;
+            } else {
+                assignment.put(ci, x);
+                removed = 1;
+            }
         }
         return removed;
     }
