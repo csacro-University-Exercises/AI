@@ -40,7 +40,7 @@ public class CSP {
 
         nodes = copy(nodes);
         //arc consistency
-        AC3(nodes);
+        AC3(nodes, true);
         //backtrack search
         nodes = recursiveBacktracking(copy(nodes));
 
@@ -60,7 +60,7 @@ public class CSP {
         System.out.println("------------------------\n");
     }
 
-    private static boolean AC3(HashMap<String, List<String>> assignment) {
+    private static boolean AC3(HashMap<String, List<String>> assignment, boolean isFirstTime) {
         constraints_queue = copy(constraints);
         String constraint;
         String[] splitConstraint;
@@ -72,8 +72,10 @@ public class CSP {
             ci = splitConstraint[1];
             cj = splitConstraint[2];
 
-            addNeighbour(cj, constraint);
-            addNeighbour(ci, constraint);
+            if(isFirstTime) {
+                addNeighbour(cj, constraint);
+                addNeighbour(ci, constraint);
+            }
             if(!checkValues(ci, cj, assignment) || !checkValues(cj, ci, assignment)) {
                 return false;
             }
@@ -96,7 +98,7 @@ public class CSP {
             copiedNodeValues = new ArrayList<String>();
             copiedNodeValues.add(value);
             copiedAssignment.put(node, copiedNodeValues);
-            if (AC3(copiedAssignment)) {
+            if (AC3(copiedAssignment, false)) {
                 HashMap<String, List<String>> result = recursiveBacktracking(copiedAssignment);
                 if (result != null) {
                     return result;
