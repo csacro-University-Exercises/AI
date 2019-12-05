@@ -10,7 +10,8 @@ public class CSP {
     private static int k;
     private static int anzNodes;
     private static int anzConstraints;
-    private static HashMap<String, List<String>> nodes = new HashMap<String, List<String>>();
+    private static HashMap<String, List<String>> nodes = new HashMap<String, List<String>>(); //assignment
+    private static LinkedList<String> constraints = new LinkedList<String>(); //CSP
     private static LinkedList<String> constraints_queue = new LinkedList<String>();
     private static HashMap<String, ArrayList<String>> neighbours = new HashMap<String, ArrayList<String>>();
 
@@ -30,7 +31,7 @@ public class CSP {
                 } else if(linecount == anzNodes+1) {
                     anzConstraints = Integer.parseInt(br.readLine());
                 } else {
-                    constraints_queue.add(br.readLine());
+                    constraints.add(br.readLine());
                 }
 
                 linecount++;
@@ -39,7 +40,19 @@ public class CSP {
             System.exit(1);
         }
 
-        //arc consistency
+        //backtrack search
+        recursiveBacktracking(copy(nodes));
+
+        //output
+        TreeMap<String, List<String>> sortedNodes = new TreeMap<String, List<String>>(nodes);
+        System.out.println(anzNodes);
+        for(Map.Entry<String, List<String>> entry: sortedNodes.entrySet()) {
+            System.out.println(entry.getKey() + entry.getValue().get(0));
+        }
+    }
+
+    private static void AC3(HashMap<String, List<String>> assignment) {
+        constraints_queue = copy(constraints);
         String constraint;
         String[] splitConstraint;
         String ci;
@@ -52,39 +65,68 @@ public class CSP {
 
             addNeighbour(cj, constraint);
             addNeighbour(ci, constraint);
-            checkValues(ci, cj);
-            checkValues(cj, ci);
-        }
-
-        //backtrack search
-        if(isBacktrackSearchNeeded(nodes)) {
-            recursiveBacktracking();
-        }
-
-        //output
-        TreeMap<String, List<String>> sortedNodes = new TreeMap<String, List<String>>(nodes);
-        System.out.println(anzNodes);
-        for(Map.Entry<String, List<String>> entry: sortedNodes.entrySet()) {
-            System.out.println(entry.getKey() + entry.getValue().get(0));
+            checkValues(ci, cj, assignment);
+            checkValues(cj, ci, assignment);
         }
     }
 
-    private static boolean recursiveBacktracking() {
-        //TODO: paramlist (have to give copied data structures because of recursion)
+    private static boolean recursiveBacktracking(HashMap<String, List<String>> assignment) {
+        //arc consistency
+        AC3(assignment);
 
-        //TODO: var <- SELECT-UNASSIGNED-VARIABLE(VARIABLES[csp], assignment, csp)
-        for() { //TODO: for each value in ORDER-DOMAIN-VALUES(var, assignment, csp)
-            if() { //TODO: if value is consistent with assignment given CONSTRAINTS[csp]
-                //TODO: add {var = value} to assignment
-                boolean result = recursiveBacktracking();
-                if (result) {
-                    //TODO: global data structure = copied data structure
-                    return true;
+        boolean success = false;
+        if(!isBacktrackSearchNeeded(assignment)) {
+            success = true;
+        } else {
+            String node = selectMRV(assignment);
+            List<String> oldNodeValues = assignment.get(node);
+            for (String value: oldNodeValues) {
+                if (isConsistent(assignment)) {
+                    List<String> nodeValues = new ArrayList<String>();
+                    nodeValues.add(value);
+                    assignment.replace(node, nodeValues);
+                    boolean result = recursiveBacktracking(copy(assignment));
+                    if (result) {
+                        success = true;
+                        break;
+                    }
+                    assignment.replace(node, oldNodeValues);
                 }
-                //TODO: remove {var = value} from assignment
             }
         }
+
+        if(success) {
+            nodes = assignment;
+        }
+        return success;
+    }
+
+    private static String selectMRV(HashMap<String, List<String>> assignment) {
+        //TODO: implement
+        return null;
+    }
+
+    private static boolean isConsistent(HashMap<String, List<String>> assignment) {
+        //TODO: implement
         return false;
+    }
+
+    private static HashMap<String, List<String>> copy(HashMap<String, List<String>> toCopy) {
+        HashMap<String, List<String>> copy = new HashMap<String, List<String>>();
+        for(HashMap.Entry<String, List<String>> entry: toCopy.entrySet()) {
+            //copy List
+            List<String> toCopyList = entry.getValue();
+            List<String> copyList = new ArrayList<String>();
+            copyList.addAll(toCopyList);
+
+            copy.put(entry.getKey(), copyList);
+        }
+        return copy;
+    }
+    private static LinkedList<String> copy(LinkedList<String> toCopy) {
+        LinkedList<String> copy = new LinkedList<String>();
+        copy.addAll(toCopy);
+        return copy;
     }
 
     private static boolean isBacktrackSearchNeeded(HashMap<String, List<String>> map) {
@@ -104,20 +146,20 @@ public class CSP {
         neighbours_c.add(constraint);
         neighbours.put(c, neighbours_c);
     }
-    private static void checkValues(String ci, String cj) {
-        if(removeInconstistentValues(ci, cj)) {
+    private static void checkValues(String ci, String cj, HashMap<String, List<String>> assignment) {
+        if(removeInconstistentValues(ci, cj, assignment)) {
             for (String s : neighbours.get(ci)) {
                 constraints_queue.addLast(s);
             }
         }
     }
-    private static boolean removeInconstistentValues(String ci, String cj) {
+    private static boolean removeInconstistentValues(String ci, String cj, HashMap<String, List<String>> assignment) {
         boolean removed = false;
-        List<String> x = nodes.get(ci);
-        List<String> y = nodes.get(cj);
+        List<String> x = assignment.get(ci);
+        List<String> y = assignment.get(cj);
 
         if(y.size() == 1 && x.remove(y.get(0))) {
-            nodes.put(ci, x);
+            assignment.put(ci, x);
             removed = true;
         }
         return removed;
