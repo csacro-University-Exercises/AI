@@ -1,7 +1,9 @@
 /**
- * @file EulidMinimax.cpp
+ * @file    EuclidMinimax.cpp
  * @authors Carolin, Dominik
- * @brief Solution to sheet 5, exercise 3 of the course Introduction to Artificial Intelligence.
+ * @brief   Solution to sheet 5, exercise 3 of the course Introduction to Artificial Intelligence.
+ * @details This solution combines the normal minimax algorithm together with alpha beta pruning and a lookup table
+ *          for speedup.
  */
 
 #include <iostream>
@@ -9,6 +11,8 @@
 #include <vector>
 #include <limits>
 #include <algorithm>
+#include <iomanip>
+#include <map>
 
 //#define DOMJUDGE                                    /* uncomment this to enable DomJugde mode           */
 
@@ -16,7 +20,7 @@
 #include <fstream>
 #endif
 
-enum Results {
+enum Result {
     WIN_STAN=1, WIN_OLLIE=-1
 };
 
@@ -42,13 +46,45 @@ class State {
         unsigned int bigNumber;
         Player player;                                /* player that did the move that lead to this state */
 
+        friend std::ostream& operator<< (std::ostream& os, const State& s) {
+            os << "Player: ";
+            if (s.player == NONE) {
+                os << "none ";
+            } else if (s.player == STAN) {
+                os << "Stan ";
+            }else {
+                os << "Ollie ";
+            }
+            os << "\tNumbers: " << std::setw(3) << s.smallNumber << "\t" << s.bigNumber;
+
+            return os;
+        }
+
+        friend bool operator< (const State &s1, const State &s2) {
+            if (s1.smallNumber < s2.smallNumber) {
+                return true;
+            } else {
+                return s1.bigNumber < s2.bigNumber;
+            }
+        }
+
 };
 
 //Helper methods
 bool isTerminal(const State &state);
-int maxValue(const State &state);
-int minValue(const State &state);
+int maxValue(const State &state,
+             int alpha=std::numeric_limits<int>::min(),
+             int beta=std::numeric_limits<int>::max());
+int minValue(const State &state,
+             int alpha=std::numeric_limits<int>::min(),
+             int beta=std::numeric_limits<int>::max());
 std::vector<State> getSuccessors(const State &state);
+
+#ifndef DOMJUDGE
+unsigned int stateNum = 0;
+#endif
+
+std::map<const State, int> lut;
 
 int main() {
     std::string readLine;
@@ -82,7 +118,7 @@ int main() {
 
     unsigned int res = maxValue(initial);
 
-    if (res == 1) {
+    if (res == WIN_STAN) {
         std::cout << "Stan wins" << std::endl;
     } else {
         std::cout << "Ollie wins" << std::endl;
@@ -109,20 +145,48 @@ bool isTerminal(const State &state) {
  * @param state State to examine.
  * @return Maximized utility value.
  */
-int maxValue(const State &state) {
+int maxValue(const State &state, int alpha, int beta) {
+#ifndef DOMJUDGE
+    std::cout << "Node: " << std::setw(3) << stateNum++ << "\t" << state << std::endl;
+#endif
+
     if (isTerminal(state)) {
+#ifndef DOMJUDGE
+        std::cout << ((state.player == STAN) ? "Stan wins" : "Ollie wins") << "\n" << std::endl;
+#endif
         return (state.player == STAN) ? WIN_STAN : WIN_OLLIE;
     }
 
     std::vector<State> successors = getSuccessors(state);
-    int currentMax = std::numeric_limits<int>::min();
+    int currentMax = alpha;
     for (const auto &s : successors) {
-        int val = minValue(s);
-        if (val > currentMax) {
-            currentMax = val;
+        auto it = lut.find(state);
+        if (it == lut.end()) {                        /* state wasn't reached before                      */
+            int val = minValue(s, alpha, beta);
+            if (val > currentMax) {
+                currentMax = val;
+                alpha = currentMax;
+            }
+        } else {                                      /* use the already examined result                  */
+            if (it->first.player == state.player) {
+#ifndef DOMJUDGE
+                std::cout << "\t\t --> lut: " << it->second << std::endl;
+#endif
+                return it->second;
+            } else {
+#ifndef DOMJUDGE
+                std::cout << "\t\t --> lut: " << -it->second << std::endl;
+#endif
+                return -it->second;
+            }
+        }
+
+        if (beta <= alpha) {
+            break;
         }
     }
 
+    lut[state] = currentMax;
     return currentMax;
 }
 
@@ -131,20 +195,46 @@ int maxValue(const State &state) {
  * @param state State to examine.
  * @return Minimized utility value.
  */
-int minValue(const State &state) {
+int minValue(const State &state, int alpha, int beta) {
+#ifndef DOMJUDGE
+    std::cout << "Node: " << std::setw(3) << stateNum++ << "\t" << state << std::endl;
+#endif
     if (isTerminal(state)) {
+#ifndef DOMJUDGE
+        std::cout << ((state.player == STAN) ? "Stan wins" : "Ollie wins") << "\n" << std::endl;
+#endif
         return (state.player == STAN) ? WIN_STAN : WIN_OLLIE;
     }
 
     std::vector<State> successors = getSuccessors(state);
-    int currentMin = std::numeric_limits<int>::max();
+    int currentMin = beta;
     for (const auto &s : successors) {
-        int val = maxValue(s);
-        if (val < currentMin) {
-            currentMin = val;
+        auto it = lut.find(state);
+        if (it == lut.end()) {                        /* state wasn't reached before                      */
+            int val = maxValue(s, alpha, beta);
+            if (val < currentMin) {
+                currentMin = val;
+                beta = currentMin;
+            }
+        } else {                                      /* use the already examined result                  */
+            if (it->first.player == state.player) {
+#ifndef DOMJUDGE
+                std::cout << "\t\t --> lut: " << it->second << std::endl;
+#endif
+                return it->second;
+            } else {
+#ifndef DOMJUDGE
+                std::cout << "\t\t --> lut: " << -it->second << std::endl;
+#endif
+                return -it->second;
+            }
+        }
+        if (beta <= alpha) {
+            break;
         }
     }
 
+    lut[state] = currentMin;
     return currentMin;
 }
 
