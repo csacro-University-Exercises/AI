@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.util.LinkedList;
 
 public class Resolution {
+    static int[] emptyClause;
 
     public static void main(String[] args) {
         LinkedList<int[]> clausesReadIn = new LinkedList<int[]>();
@@ -26,6 +27,7 @@ public class Resolution {
                         if(br_buf.length == 4 && br_buf[1].equals("cnf")) {
                             anzAtom = Integer.parseInt(br_buf[2]);
                             anzClauses = Integer.parseInt(br_buf[3]);
+                            emptyClause = new int[anzClauses];
                         }
                         break;
                     default:
@@ -66,7 +68,7 @@ public class Resolution {
                     union(clausesNew, resolvents);
                 }
             }
-            if(clausesAll.containsAll(clausesNew)) {
+            if(isFirstSubsetOfSecond(clausesNew, clausesAll)) {
                 return false;
             }
             union(clausesAll, clausesNew);
@@ -75,8 +77,8 @@ public class Resolution {
 
     private static LinkedList<int[]> plResolve(int[] ci, int[] cj) {
         LinkedList<int[]> ret = new LinkedList<int[]>();
-        LinkedList<Integer> resolvePositions = getResolvePositions(ci, cj);
-        if(resolvePositions.size() == 1) {
+        Integer resolvePosition = getResolvePositions(ci, cj);
+        if(resolvePosition != null) {
             int[] resolvent = new int[ci.length];
             for(int a=0; a<ci.length; a++) {
                 resolvent[a] = ci[a] + cj[a];
@@ -86,14 +88,18 @@ public class Resolution {
         return ret;
     }
 
-    private static LinkedList<Integer> getResolvePositions(int[] ci, int[] cj) {
-        LinkedList<Integer> positions = new LinkedList<Integer>();
+    private static Integer getResolvePositions(int[] ci, int[] cj) {
+        Integer position = null;
         for (int p=0; p<ci.length; p++) {
             if( (ci[p] == 1 && cj[p] == -1) || (ci[p] == -1 && cj[p] == 1)) {
-                positions.add(p);
+                if(position == null) {
+                    position = p;
+                } else {
+                    return null;
+                }
             }
         }
-        return positions;
+        return position;
     }
 
     private static void union(LinkedList<int[]> l1Union, LinkedList<int[]> l2ToUnite) {
@@ -105,19 +111,38 @@ public class Resolution {
     }
 
     private static boolean isEmptyClauseElem(LinkedList<int[]> list) {
-        int count;
         for(int[] clause: list) {
-            count = 0;
-            for(int i=0; i<clause.length; i++) {
-                if(clause[i] != 0) {
-                    break;
-                }
-                count++;
-            }
-            if(count == clause.length) {
+            if(areArraysEqual(clause, emptyClause)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private static boolean isFirstSubsetOfSecond(LinkedList<int[]> subSet, LinkedList<int[]> set) {
+        boolean found = false;
+        for(int[] subSetClause: subSet) {
+            for(int[] setClause: set) {
+                found = areArraysEqual(subSetClause, setClause);
+                if(found) {
+                    break;
+                }
+            }
+            if(!found) {
+                return false;
+            } else {
+                found = false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean areArraysEqual(int[] ar1, int[] ar2) {
+        for(int i=0; i<ar1.length; i++) {
+            if(ar1[i] != ar2[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }
