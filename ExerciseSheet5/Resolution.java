@@ -62,7 +62,7 @@ public class Resolution {
                 for (int j=i+1; j<clausesAll.size(); j++) {
                     cj = clausesAll.get(j);
                     LinkedList<int[]> resolvents = plResolve(ci, cj);
-                    if (isEmptyClauseElem(resolvents)) {
+                    if (isElemInList(emptyClause, resolvents)) {
                         return true;
                     }
                     union(clausesNew, resolvents);
@@ -81,7 +81,13 @@ public class Resolution {
         if(resolvePosition != null) {
             int[] resolvent = new int[ci.length];
             for(int a=0; a<ci.length; a++) {
-                resolvent[a] = ci[a] + cj[a];
+                if(a == resolvePosition) {
+                    resolvent[a] = 0;
+                } else if (ci[a] == 1 || cj[a] == 1) {
+                    resolvent[a] = 1;
+                } else if (ci[a] == -1 || cj[a] == -1) {
+                    resolvent[a] = -1;
+                }
             }
             ret.add(resolvent);
         }
@@ -104,15 +110,15 @@ public class Resolution {
 
     private static void union(LinkedList<int[]> l1Union, LinkedList<int[]> l2ToUnite) {
         for(int[] valToUnite: l2ToUnite) {
-            if(!l1Union.contains(valToUnite)) {
+            if(!isElemInList(valToUnite, l1Union)) {
                 l1Union.add(valToUnite);
             }
         }
     }
 
-    private static boolean isEmptyClauseElem(LinkedList<int[]> list) {
+    private static boolean isElemInList(int[] elem, LinkedList<int[]> list) {
         for(int[] clause: list) {
-            if(areArraysEqual(clause, emptyClause)) {
+            if(areArraysEqual(clause, elem)) {
                 return true;
             }
         }
